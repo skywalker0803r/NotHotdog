@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Not Hotdog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Not <span>Hotdog</span></h1>
+            <p class="subtitle">看看你的圖片是不是熱狗</p>
+        </div>
+
+        <div class="upload-container">
+            <form id="upload-form">
+                <div class="upload-area" id="upload-area">
+                    <input type="file" id="image-input" accept="image/*">
+                    <div class="upload-text">
+                        <img src="{{ url_for('static', filename='images/upload-icon.svg') }}" alt="上傳" class="upload-icon">
+                        <p>點擊或拖曳圖片至此</p>
+                    </div>
+                </div>
+                <button type="submit" class="analyze-btn">開始分析</button>
+            </form>
+        </div>
+        
+        <div id="image-preview" class="preview-container" style="display: none;">
+            <img id="preview-image" src="" alt="預覽圖片">
+        </div>
+
+        <div id="result" class="result-container" style="display: none;">
+            <div class="result-box">
+                <h2 id="prediction-text" class="result-text"></h2>
+                <p id="confidence-text" class="confidence-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('image-input');
+        const previewImage = document.getElementById('preview-image');
+        const imagePreview = document.getElementById('image-preview');
+        const uploadArea = document.getElementById('upload-area');
+
+        // 拖放功能
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                imageInput.files = e.dataTransfer.files;
+                handleImagePreview(file);
+            }
+        });
+
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleImagePreview(file);
+            }
+        });
+
+        function handleImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                imagePreview.style.display = 'block';
+                document.querySelector('.analyze-btn').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('upload-form').onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('image-input');
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const resultDiv = document.getElementById('result');
+                resultDiv.style.display = 'none';
+                
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                const predictionText = document.getElementById('prediction-text');
+                const confidenceText = document.getElementById('confidence-text');
+                
+                resultDiv.style.display = 'block';
+                if (result.is_hotdog) {
+                    predictionText.textContent = 'Hotdog! 🌭';
+                    resultDiv.className = 'result-container hotdog';
+                } else {
+                    predictionText.textContent = 'Not Hotdog! ❌';
+                    resultDiv.className = 'result-container not-hotdog';
+                }
+                confidenceText.textContent = `信心度：${(result.confidence * 100).toFixed(2)}%`;
+            } catch (error) {
+                alert('發生錯誤：' + error);
+            }
+        };
+    </script>
+</body>
+</html> 
