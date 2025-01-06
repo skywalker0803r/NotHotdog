@@ -1,13 +1,13 @@
 import torch
 import torchvision.transforms as transforms
-from torchvision.models import resnet50
+from torchvision.models import mobilenet_v2
 from PIL import Image
 
 class HotdogClassifier:
     def __init__(self):
         # 載入預訓練的 ResNet50 模型
-        self.model = resnet50(pretrained=False)
-        self.model.load_state_dict(torch.load('model/resnet50.pth'))
+        self.model = mobilenet_v2(pretrained=False)
+        self.model.load_state_dict(torch.load('model/mobilenet_v2.pth'))
         self.model.eval()
         
         # 圖像預處理
