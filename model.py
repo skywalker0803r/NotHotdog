@@ -6,7 +6,8 @@ from PIL import Image
 class HotdogClassifier:
     def __init__(self):
         # 載入預訓練的 ResNet50 模型
-        self.model = resnet50(pretrained=True)
+        self.model = resnet50(pretrained=False)
+        self.model.load_state_dict(torch.load('model/resnet50.pth'))
         self.model.eval()
         
         # 圖像預處理
